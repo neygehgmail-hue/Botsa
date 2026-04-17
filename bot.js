@@ -8,9 +8,11 @@ const config = {
 }
 
 let bot
-let afkInterval
+let afkInterval = null
 
 function createBot() {
+  console.log('🚀 Starting bot...')
+
   bot = mineflayer.createBot(config)
 
   bot.once('login', () => {
@@ -20,14 +22,19 @@ function createBot() {
   bot.once('spawn', () => {
     console.log('🌍 Spawned')
 
-    // Wait before starting actions (important)
-    setTimeout(startAFK, 5000)
+    // VERY IMPORTANT: wait before doing anything
+    setTimeout(() => {
+      startAFK()
+    }, 10000) // 10 sec delay (prevents invalid movement)
   })
 
   bot.on('end', () => {
-    console.log('❌ Disconnected. Reconnecting in 15s...')
+    console.log('❌ Disconnected. Reconnecting in 30s...')
     cleanup()
-    setTimeout(createBot, 15000)
+
+    setTimeout(() => {
+      createBot()
+    }, 30000)
   })
 
   bot.on('kicked', (reason) => {
@@ -42,10 +49,40 @@ function createBot() {
 function startAFK() {
   if (!bot.entity) return
 
-  console.log('🟢 Starting safe AFK mode')
+  console.log('🟢 Ultra-safe AFK mode started')
 
   afkInterval = setInterval(() => {
     if (!bot.entity) return
+
+    safeLook()
+  }, randomTime(90000, 180000)) // 1.5–3 minutes
+}
+
+function safeLook() {
+  try {
+    const yaw = bot.entity.yaw + (Math.random() - 0.5) * 0.2
+    const pitch = (Math.random() - 0.5) * 0.1
+
+    bot.look(yaw, pitch, true)
+
+    console.log('👀 Slight camera movement')
+  } catch (e) {
+    console.log('⚠️ Look error:', e.message)
+  }
+}
+
+function randomTime(min, max) {
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
+function cleanup() {
+  if (afkInterval) {
+    clearInterval(afkInterval)
+    afkInterval = null
+  }
+}
+
+createBot()    if (!bot.entity) return
 
     // Pick a random action (NOT all at once)
     const action = Math.floor(Math.random() * 3)
